@@ -5,6 +5,15 @@ const blogSlice = createSlice({
   name: 'blogs',
   initialState: [],
   reducers: {
+    likeLocally(state, action) {
+      const id = action.payload
+      const blogToChange = state.find((b) => b.id === id)
+      const changedBlog = {
+        ...blogToChange,
+        likes: blogToChange.likes + 1,
+      }
+      return state.map((b) => (b.id !== id ? b : changedBlog))
+    },
     appendBlog(state, action) {
       state.push(action.payload)
     },
@@ -28,5 +37,15 @@ export const createBlog = (object) => {
   }
 }
 
-export const { appendBlog, setBlogs } = blogSlice.actions
+export const like = (id) => {
+  return async (dispatch, getState) => {
+    dispatch(likeLocally(id))
+    const changedBlog = {
+      likes: getState().blogs.find((b) => b.id === id).likes,
+    }
+    await blogService.update(id, changedBlog)
+  }
+}
+
+export const { appendBlog, setBlogs, likeLocally } = blogSlice.actions
 export default blogSlice.reducer

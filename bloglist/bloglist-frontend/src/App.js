@@ -7,10 +7,10 @@ import blogService from './services/blogs'
 import loginService from './services/login'
 import { setMessage } from './reducers/messageReducer'
 import { useDispatch, useSelector } from 'react-redux'
-import { createBlog, initializeBlogs } from './reducers/blogReducer'
+import { createBlog, initializeBlogs, like } from './reducers/blogReducer'
 
 const App = () => {
-  const blogs = useSelector(state => state.blogs)
+  const blogs = useSelector((state) => state.blogs)
   const dispatch = useDispatch()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -30,17 +30,15 @@ const App = () => {
     }
   }, [])
 
-
   const handleLogin = async (event) => {
     event.preventDefault()
     try {
       const user = await loginService.login({
-        username, password
+        username,
+        password,
       })
       blogService.setToken(user.token)
-      window.localStorage.setItem(
-        'loggedBlogappUser', JSON.stringify(user)
-      )
+      window.localStorage.setItem('loggedBlogappUser', JSON.stringify(user))
       setUser(user)
       setUsername('')
       setPassword('')
@@ -53,9 +51,7 @@ const App = () => {
     event.preventDefault()
     try {
       blogService.setToken('')
-      window.localStorage.removeItem(
-        'loggedBlogappUser'
-      )
+      window.localStorage.removeItem('loggedBlogappUser')
       setUser(null)
     } catch (exception) {
       console.log(exception)
@@ -63,40 +59,40 @@ const App = () => {
   }
 
   const handleCreate = (newBlog) => {
-    try{
-    dispatch(createBlog(newBlog))
-    } catch(exception) {
+    try {
+      dispatch(createBlog(newBlog))
+    } catch (exception) {
       showMessage(exception.response.data.error, 'error')
     }
-    showMessage(`a new blog ${newBlog.title} by ${newBlog.author} added`, 'notification')
+    showMessage(
+      `a new blog ${newBlog.title} by ${newBlog.author} added`,
+      'notification'
+    )
     blogFormRef.current.toggleVisibility()
   }
 
   const handleLike = (blog) => {
-    blogService.update({
-      id: blog.id,
-      newObject: {
-        title: blog.title,
-        author: blog.author,
-        url: blog.url,
-        likes: blog.likes + 1,
-        user: blog.user.id
-      }
-    }).then((returnedBlog) => {
-      //setBlogs(blogs.map(blog => blog.id !== returnedBlog.id ? blog : returnedBlog))
-    }).catch((exception) => {
+    try {
+      dispatch(like(blog.id))
+    } catch (exception) {
       showMessage(exception.response.data.error, 'error')
-    })
+    }
   }
 
   const handleRemove = (blog) => {
     if (window.confirm(`Remove blog ${blog.title} by ${blog.author}`)) {
-      blogService.deleteBlog(blog.id).then(() => {
-        showMessage(`blog ${blog.title} by ${blog.author} removed`, 'notification')
-        //setBlogs(blogs.filter(b => b.id !== blog.id))
-      }).catch((exception) => {
-        showMessage(exception.response.data.error, 'error')
-      })
+      blogService
+        .deleteBlog(blog.id)
+        .then(() => {
+          showMessage(
+            `blog ${blog.title} by ${blog.author} removed`,
+            'notification'
+          )
+          //setBlogs(blogs.filter(b => b.id !== blog.id))
+        })
+        .catch((exception) => {
+          showMessage(exception.response.data.error, 'error')
+        })
     }
   }
 
@@ -107,12 +103,11 @@ const App = () => {
     }, 5000)
   }
 
-
   if (user === null) {
     return (
       <div>
         <h2>Log in to application</h2>
-        <Notification/>
+        <Notification />
         <form onSubmit={handleLogin}>
           <div>
             username
@@ -134,7 +129,9 @@ const App = () => {
               onChange={({ target }) => setPassword(target.value)}
             />
           </div>
-          <button id='login-button' type='submit'>login</button>
+          <button id='login-button' type='submit'>
+            login
+          </button>
         </form>
       </div>
     )
@@ -142,20 +139,25 @@ const App = () => {
   return (
     <div>
       <h2>blogs</h2>
-      <Notification/>
+      <Notification />
       <p>
         {user.name} logged in
         <button onClick={handleLogout}>logout</button>
       </p>
       <Togglable buttonLabel='new note' ref={blogFormRef}>
-        <CreateForm
-          handleSubmit={handleCreate}
-        />
+        <CreateForm handleSubmit={handleCreate} />
       </Togglable>
-      {[...blogs].sort((a, b) => (b.likes - a.likes))
-        .map(blog =>
-          <Blog key={blog.id} blog={blog} handleLike={handleLike} handleRemove={handleRemove} user={user} />
-        )}
+      {[...blogs]
+        .sort((a, b) => b.likes - a.likes)
+        .map((blog) => (
+          <Blog
+            key={blog.id}
+            blog={blog}
+            handleLike={handleLike}
+            handleRemove={handleRemove}
+            user={user}
+          />
+        ))}
     </div>
   )
 }
