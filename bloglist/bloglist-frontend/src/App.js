@@ -6,21 +6,20 @@ import Togglable from './components/Togglable'
 import blogService from './services/blogs'
 import loginService from './services/login'
 import { setMessage } from './reducers/messageReducer'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
+import { createBlog, initializeBlogs } from './reducers/blogReducer'
 
 const App = () => {
-  const [blogs, setBlogs] = useState([])
+  const blogs = useSelector(state => state.blogs)
+  const dispatch = useDispatch()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [user, setUser] = useState(null)
   const blogFormRef = useRef()
-  const dispatch = useDispatch()
 
   useEffect(() => {
-    blogService.getAll().then(blogs =>
-      setBlogs(blogs)
-    )
-  }, [])
+    dispatch(initializeBlogs())
+  }, [dispatch])
 
   useEffect(() => {
     const loggedUserJSON = window.localStorage.getItem('loggedBlogappUser')
@@ -64,14 +63,13 @@ const App = () => {
   }
 
   const handleCreate = (newBlog) => {
-    blogService.create(newBlog)
-      .then(returnedBlog => {
-        showMessage(`a new blog ${newBlog.title} by ${newBlog.author} added`, 'notification')
-        setBlogs(blogs.concat(returnedBlog))
-        blogFormRef.current.toggleVisibility()
-      }).catch((exception) => {
-        showMessage(exception.response.data.error, 'error')
-      })
+    try{
+    dispatch(createBlog(newBlog))
+    } catch(exception) {
+      showMessage(exception.response.data.error, 'error')
+    }
+    showMessage(`a new blog ${newBlog.title} by ${newBlog.author} added`, 'notification')
+    blogFormRef.current.toggleVisibility()
   }
 
   const handleLike = (blog) => {
@@ -84,8 +82,8 @@ const App = () => {
         likes: blog.likes + 1,
         user: blog.user.id
       }
-    }).then(returnedBlog => {
-      setBlogs(blogs.map(blog => blog.id !== returnedBlog.id ? blog : returnedBlog))
+    }).then((returnedBlog) => {
+      //setBlogs(blogs.map(blog => blog.id !== returnedBlog.id ? blog : returnedBlog))
     }).catch((exception) => {
       showMessage(exception.response.data.error, 'error')
     })
@@ -95,7 +93,7 @@ const App = () => {
     if (window.confirm(`Remove blog ${blog.title} by ${blog.author}`)) {
       blogService.deleteBlog(blog.id).then(() => {
         showMessage(`blog ${blog.title} by ${blog.author} removed`, 'notification')
-        setBlogs(blogs.filter(b => b.id !== blog.id))
+        //setBlogs(blogs.filter(b => b.id !== blog.id))
       }).catch((exception) => {
         showMessage(exception.response.data.error, 'error')
       })
@@ -154,7 +152,7 @@ const App = () => {
           handleSubmit={handleCreate}
         />
       </Togglable>
-      {blogs.sort((a, b) => (b.likes - a.likes))
+      {[...blogs].sort((a, b) => (b.likes - a.likes))
         .map(blog =>
           <Blog key={blog.id} blog={blog} handleLike={handleLike} handleRemove={handleRemove} user={user} />
         )}
