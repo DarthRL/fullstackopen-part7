@@ -5,14 +5,16 @@ import CreateForm from './components/CreateForm'
 import Togglable from './components/Togglable'
 import blogService from './services/blogs'
 import loginService from './services/login'
+import { setMessage } from './reducers/messageReducer'
+import { useDispatch } from 'react-redux'
 
 const App = () => {
   const [blogs, setBlogs] = useState([])
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [user, setUser] = useState(null)
-  const [message, setMessage] = useState(null)
   const blogFormRef = useRef()
+  const dispatch = useDispatch()
 
   useEffect(() => {
     blogService.getAll().then(blogs =>
@@ -101,9 +103,9 @@ const App = () => {
   }
 
   const showMessage = (text, type) => {
-    setMessage({ text, type })
+    dispatch(setMessage({ text, type }))
     setTimeout(() => {
-      setMessage(null)
+      dispatch(setMessage(null))
     }, 5000)
   }
 
@@ -112,7 +114,7 @@ const App = () => {
     return (
       <div>
         <h2>Log in to application</h2>
-        <Notification message={message} />
+        <Notification/>
         <form onSubmit={handleLogin}>
           <div>
             username
@@ -142,7 +144,7 @@ const App = () => {
   return (
     <div>
       <h2>blogs</h2>
-      <Notification message={message} />
+      <Notification/>
       <p>
         {user.name} logged in
         <button onClick={handleLogout}>logout</button>
