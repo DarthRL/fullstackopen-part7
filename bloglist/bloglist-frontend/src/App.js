@@ -7,7 +7,7 @@ import blogService from './services/blogs'
 import loginService from './services/login'
 import { setMessage } from './reducers/messageReducer'
 import { useDispatch, useSelector } from 'react-redux'
-import { createBlog, initializeBlogs, like } from './reducers/blogReducer'
+import { createBlog, initializeBlogs, likeBlog } from './reducers/blogReducer'
 
 const App = () => {
   const blogs = useSelector((state) => state.blogs)
@@ -73,7 +73,7 @@ const App = () => {
 
   const handleLike = (blog) => {
     try {
-      dispatch(like(blog.id))
+      dispatch(likeBlog(blog.id))
     } catch (exception) {
       showMessage(exception.response.data.error, 'error')
     }
