@@ -38,9 +38,15 @@ export const likeBlog = id => {
     const objectToUpload = {
       likes: changedBlog.likes,
     }
-    console.log(changedBlog)
     await blogService.update(id, objectToUpload)
     dispatch(setBlogs(getState().blogs.map(b => b.id !== id ? b : changedBlog)))
+  }
+}
+
+export const deleteBlog = id => {
+  return async (dispatch, getState) => {
+    await blogService.deleteBlog(id)
+    dispatch(setBlogs(getState().blogs.filter(b => b.id !== id)))
   }
 }
 

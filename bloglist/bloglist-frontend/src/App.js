@@ -7,10 +7,10 @@ import blogService from './services/blogs'
 import loginService from './services/login'
 import { setMessage } from './reducers/messageReducer'
 import { useDispatch, useSelector } from 'react-redux'
-import { createBlog, initializeBlogs, likeBlog } from './reducers/blogReducer'
+import { createBlog, deleteBlog, initializeBlogs, likeBlog } from './reducers/blogReducer'
 
 const App = () => {
-  const blogs = useSelector((state) => state.blogs)
+  const blogs = useSelector(state => state.blogs)
   const dispatch = useDispatch()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -30,7 +30,7 @@ const App = () => {
     }
   }, [])
 
-  const handleLogin = async (event) => {
+  const handleLogin = async event => {
     event.preventDefault()
     try {
       const user = await loginService.login({
@@ -47,7 +47,7 @@ const App = () => {
     }
   }
 
-  const handleLogout = async (event) => {
+  const handleLogout = async event => {
     event.preventDefault()
     try {
       blogService.setToken('')
@@ -58,7 +58,7 @@ const App = () => {
     }
   }
 
-  const handleCreate = (newBlog) => {
+  const handleCreate = newBlog => {
     try {
       dispatch(createBlog(newBlog))
     } catch (exception) {
@@ -71,7 +71,7 @@ const App = () => {
     blogFormRef.current.toggleVisibility()
   }
 
-  const handleLike = (blog) => {
+  const handleLike = blog => {
     try {
       dispatch(likeBlog(blog.id))
     } catch (exception) {
@@ -79,20 +79,17 @@ const App = () => {
     }
   }
 
-  const handleRemove = (blog) => {
+  const handleRemove = blog => {
     if (window.confirm(`Remove blog ${blog.title} by ${blog.author}`)) {
-      blogService
-        .deleteBlog(blog.id)
-        .then(() => {
-          showMessage(
-            `blog ${blog.title} by ${blog.author} removed`,
-            'notification'
-          )
-          //setBlogs(blogs.filter(b => b.id !== blog.id))
-        })
-        .catch((exception) => {
-          showMessage(exception.response.data.error, 'error')
-        })
+      try {
+        dispatch(deleteBlog(blog.id))
+        showMessage(
+          `blog ${blog.title} by ${blog.author} removed`,
+          'notification'
+        )
+      } catch (exception) {
+        showMessage(exception.response.data.error, 'error')
+      }
     }
   }
 
@@ -149,7 +146,7 @@ const App = () => {
       </Togglable>
       {[...blogs]
         .sort((a, b) => b.likes - a.likes)
-        .map((blog) => (
+        .map(blog => (
           <Blog
             key={blog.id}
             blog={blog}
