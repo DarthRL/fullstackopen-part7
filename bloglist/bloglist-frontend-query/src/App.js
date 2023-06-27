@@ -6,18 +6,30 @@ import Togglable from './components/Togglable'
 import blogService from './services/blogs'
 import loginService from './services/login'
 import { useMessageDispatch } from './components/MessageContextProvider'
+import { useMutation, useQuery, useQueryClient } from 'react-query'
 
 const App = () => {
-  const [blogs, setBlogs] = useState([])
+  const queryClient = useQueryClient()
+  const blogResults = useQuery('blogs', blogService.getAll)
+  const blogs = blogResults.data
+  const newBlogMutation = useMutation(blogService.create, {
+    onSuccess: newBlog => {
+      const blogs = queryClient.getQueryData('blogs')
+      queryClient.setQueryData('blogs', blogs.concat(newBlog))
+    }
+  })
+  const updateBlogMutation = useMutation(blogService.update, {
+    onSuccess: newBlog => {
+      const blogs = queryClient.getQueryData('blogs')
+      const newBlogs = blogs.map(b => b.id !== newBlog.id ? b : newBlog)
+      queryClient.setQueryData('blogs', newBlogs)
+    }
+  })
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [user, setUser] = useState(null)
   const messageDispatch = useMessageDispatch()
   const blogFormRef = useRef()
-
-  useEffect(() => {
-    blogService.getAll().then(blogs => setBlogs(blogs))
-  }, [])
 
   useEffect(() => {
     const loggedUserJSON = window.localStorage.getItem('loggedBlogappUser')
@@ -56,42 +68,25 @@ const App = () => {
     }
   }
 
-  const handleCreate = newBlog => {
-    blogService
-      .create(newBlog)
-      .then(returnedBlog => {
-        showMessage(
-          `a new blog ${newBlog.title} by ${newBlog.author} added`,
-          'notification'
-        )
-        setBlogs(blogs.concat(returnedBlog))
-        blogFormRef.current.toggleVisibility()
-      })
-      .catch(exception => {
-        showMessage(exception.response.data.error, 'error')
-      })
+  const handleCreate = async newBlog => {
+    try {
+      await newBlogMutation.mutateAsync(newBlog)
+      showMessage(
+        `a new blog ${newBlog.title} by ${newBlog.author} added`,
+        'notification'
+      )
+      blogFormRef.current.toggleVisibility()
+    } catch (exception) {
+      showMessage(exception.message, 'error')
+    }
   }
 
-  const handleLike = blog => {
-    blogService
-      .update({
-        id: blog.id,
-        newObject: {
-          title: blog.title,
-          author: blog.author,
-          url: blog.url,
-          likes: blog.likes + 1,
-          user: blog.user.id,
-        },
-      })
-      .then(returnedBlog => {
-        setBlogs(
-          blogs.map(blog => (blog.id !== returnedBlog.id ? blog : returnedBlog))
-        )
-      })
-      .catch(exception => {
-        showMessage(exception.response.data.error, 'error')
-      })
+  const handleLike = async blog => {
+    try {
+      await updateBlogMutation.mutateAsync({id: blog.id, newObject: {likes: blog.likes + 1}})
+    } catch (exception) {
+      showMessage(exception.message, 'error')
+    }
   }
 
   const handleRemove = blog => {
@@ -103,7 +98,7 @@ const App = () => {
             `blog ${blog.title} by ${blog.author} removed`,
             'notification'
           )
-          setBlogs(blogs.filter(b => b.id !== blog.id))
+          //setBlogs(blogs.filter(b => b.id !== blog.id))
         })
         .catch(exception => {
           showMessage(exception.response.data.error, 'error')
@@ -117,6 +112,7 @@ const App = () => {
       messageDispatch({ type: 'CLEAR' })
     }, 5000)
   }
+  if (!blogs) return <div></div>
 
   if (user === null) {
     return (
