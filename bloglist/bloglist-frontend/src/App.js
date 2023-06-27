@@ -63,39 +63,44 @@ const App = () => {
     }
   }
 
-  const handleCreate = newBlog => {
-    dispatch(createBlog(newBlog)).catch(exception => {
-      dispatch(showMessage(exception.message, 'error'))
-      return
-    })
-    dispatch(
-      showMessage(
-        `a new blog ${newBlog.title} by ${newBlog.author} added`,
-        'notification'
-      )
-    )
-    blogFormRef.current.toggleVisibility()
-  }
-
-  const handleLike = blog => {
-    dispatch(likeBlog(blog.id)).catch(exception => {
-      dispatch(showMessage(exception.message, 'error'))
-      return
-    })
-  }
-
-  const handleRemove = blog => {
-    if (window.confirm(`Remove blog ${blog.title} by ${blog.author}`)) {
-      dispatch(deleteBlog(blog.id)).catch(exception => {
-        dispatch(showMessage(exception.message, 'error'))
-        return
-      })
+  const handleCreate = async newBlog => {
+    try {
+      await dispatch(createBlog(newBlog))
       dispatch(
         showMessage(
-          `blog ${blog.title} by ${blog.author} removed`,
+          `a new blog ${newBlog.title} by ${newBlog.author} added`,
           'notification'
         )
       )
+    } catch (exception) {
+      dispatch(showMessage(exception.message, 'error'))
+      return
+    }
+    blogFormRef.current.toggleVisibility()
+  }
+
+  const handleLike = async blog => {
+    try {
+      await dispatch(likeBlog(blog.id))
+    } catch (exception) {
+      dispatch(showMessage(exception.message, 'error'))
+      return
+    }
+  }
+
+  const handleRemove = async blog => {
+    if (window.confirm(`Remove blog ${blog.title} by ${blog.author}`)) {
+      try {
+        await dispatch(deleteBlog(blog.id))
+        dispatch(
+          showMessage(
+            `blog ${blog.title} by ${blog.author} removed`,
+            'notification'
+          )
+        )
+      } catch (exception) {
+        dispatch(showMessage(exception.message, 'error'))
+      }
     }
   }
 
