@@ -5,9 +5,14 @@ import CreateForm from './components/CreateForm'
 import Togglable from './components/Togglable'
 import blogService from './services/blogs'
 import loginService from './services/login'
-import { setMessage } from './reducers/messageReducer'
+import { showMessage } from './reducers/messageReducer'
 import { useDispatch, useSelector } from 'react-redux'
-import { createBlog, deleteBlog, initializeBlogs, likeBlog } from './reducers/blogReducer'
+import {
+  createBlog,
+  deleteBlog,
+  initializeBlogs,
+  likeBlog,
+} from './reducers/blogReducer'
 
 const App = () => {
   const blogs = useSelector(state => state.blogs)
@@ -59,45 +64,39 @@ const App = () => {
   }
 
   const handleCreate = newBlog => {
-    try {
-      dispatch(createBlog(newBlog))
-    } catch (exception) {
-      showMessage(exception.response.data.error, 'error')
-    }
-    showMessage(
-      `a new blog ${newBlog.title} by ${newBlog.author} added`,
-      'notification'
+    dispatch(createBlog(newBlog)).catch(exception => {
+      dispatch(showMessage(exception.message, 'error'))
+      return
+    })
+    dispatch(
+      showMessage(
+        `a new blog ${newBlog.title} by ${newBlog.author} added`,
+        'notification'
+      )
     )
     blogFormRef.current.toggleVisibility()
   }
 
   const handleLike = blog => {
-    try {
-      dispatch(likeBlog(blog.id))
-    } catch (exception) {
-      showMessage(exception.response.data.error, 'error')
-    }
+    dispatch(likeBlog(blog.id)).catch(exception => {
+      dispatch(showMessage(exception.message, 'error'))
+      return
+    })
   }
 
   const handleRemove = blog => {
     if (window.confirm(`Remove blog ${blog.title} by ${blog.author}`)) {
-      try {
-        dispatch(deleteBlog(blog.id))
+      dispatch(deleteBlog(blog.id)).catch(exception => {
+        dispatch(showMessage(exception.message, 'error'))
+        return
+      })
+      dispatch(
         showMessage(
           `blog ${blog.title} by ${blog.author} removed`,
           'notification'
         )
-      } catch (exception) {
-        showMessage(exception.response.data.error, 'error')
-      }
+      )
     }
-  }
-
-  const showMessage = (text, type) => {
-    dispatch(setMessage({ text, type }))
-    setTimeout(() => {
-      dispatch(setMessage(null))
-    }, 5000)
   }
 
   if (user === null) {

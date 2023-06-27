@@ -13,5 +13,13 @@ const messageSlice = createSlice({
   },
 })
 
+export const showMessage = (text, type) => {
+  return async dispatch => {
+    dispatch(setMessage({ text, type }))
+    setTimeout(() => {
+      dispatch(setMessage(null))
+    }, 5000)
+  }
+}
 export const { setMessage, clearMessage } = messageSlice.actions
 export default messageSlice.reducer
