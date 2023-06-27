@@ -16,15 +16,17 @@ const App = () => {
     onSuccess: newBlog => {
       const blogs = queryClient.getQueryData('blogs')
       queryClient.setQueryData('blogs', blogs.concat(newBlog))
-    }
+    },
   })
   const updateBlogMutation = useMutation(blogService.update, {
     onSuccess: newBlog => {
       const blogs = queryClient.getQueryData('blogs')
-      const newBlogs = blogs.map(b => b.id !== newBlog.id ? b : newBlog)
+      const newBlogs = blogs.map(b => (b.id !== newBlog.id ? b : newBlog))
       queryClient.setQueryData('blogs', newBlogs)
-    }
+    },
   })
+  const deleteBlogMutation = useMutation(blogService.deleteBlog)
+
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [user, setUser] = useState(null)
@@ -83,26 +85,27 @@ const App = () => {
 
   const handleLike = async blog => {
     try {
-      await updateBlogMutation.mutateAsync({id: blog.id, newObject: {likes: blog.likes + 1}})
+      await updateBlogMutation.mutateAsync({
+        id: blog.id,
+        newObject: { likes: blog.likes + 1 },
+      })
     } catch (exception) {
       showMessage(exception.message, 'error')
     }
   }
 
-  const handleRemove = blog => {
+  const handleRemove = async blog => {
     if (window.confirm(`Remove blog ${blog.title} by ${blog.author}`)) {
-      blogService
-        .deleteBlog(blog.id)
-        .then(() => {
-          showMessage(
-            `blog ${blog.title} by ${blog.author} removed`,
-            'notification'
-          )
-          //setBlogs(blogs.filter(b => b.id !== blog.id))
-        })
-        .catch(exception => {
-          showMessage(exception.response.data.error, 'error')
-        })
+      try {
+        await deleteBlogMutation.mutateAsync(blog.id)
+        showMessage(
+          `blog ${blog.title} by ${blog.author} removed`,
+          'notification'
+        )
+        queryClient.setQueryData('blogs', blogs.filter(b => b.id !== blog.id))
+      } catch (exception) {
+        showMessage(exception.message, 'error')
+      }
     }
   }
 
