@@ -5,19 +5,18 @@ import CreateForm from './components/CreateForm'
 import Togglable from './components/Togglable'
 import blogService from './services/blogs'
 import loginService from './services/login'
+import { useMessageDispatch } from './components/MessageContextProvider'
 
 const App = () => {
   const [blogs, setBlogs] = useState([])
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [user, setUser] = useState(null)
-  const [message, setMessage] = useState(null)
+  const messageDispatch = useMessageDispatch()
   const blogFormRef = useRef()
 
   useEffect(() => {
-    blogService.getAll().then(blogs =>
-      setBlogs(blogs)
-    )
+    blogService.getAll().then(blogs => setBlogs(blogs))
   }, [])
 
   useEffect(() => {
@@ -29,17 +28,15 @@ const App = () => {
     }
   }, [])
 
-
-  const handleLogin = async (event) => {
+  const handleLogin = async event => {
     event.preventDefault()
     try {
       const user = await loginService.login({
-        username, password
+        username,
+        password,
       })
       blogService.setToken(user.token)
-      window.localStorage.setItem(
-        'loggedBlogappUser', JSON.stringify(user)
-      )
+      window.localStorage.setItem('loggedBlogappUser', JSON.stringify(user))
       setUser(user)
       setUsername('')
       setPassword('')
@@ -48,71 +45,84 @@ const App = () => {
     }
   }
 
-  const handleLogout = async (event) => {
+  const handleLogout = async event => {
     event.preventDefault()
     try {
       blogService.setToken('')
-      window.localStorage.removeItem(
-        'loggedBlogappUser'
-      )
+      window.localStorage.removeItem('loggedBlogappUser')
       setUser(null)
     } catch (exception) {
       console.log(exception)
     }
   }
 
-  const handleCreate = (newBlog) => {
-    blogService.create(newBlog)
+  const handleCreate = newBlog => {
+    blogService
+      .create(newBlog)
       .then(returnedBlog => {
-        showMessage(`a new blog ${newBlog.title} by ${newBlog.author} added`, 'notification')
+        showMessage(
+          `a new blog ${newBlog.title} by ${newBlog.author} added`,
+          'notification'
+        )
         setBlogs(blogs.concat(returnedBlog))
         blogFormRef.current.toggleVisibility()
-      }).catch((exception) => {
+      })
+      .catch(exception => {
         showMessage(exception.response.data.error, 'error')
       })
   }
 
-  const handleLike = (blog) => {
-    blogService.update({
-      id: blog.id,
-      newObject: {
-        title: blog.title,
-        author: blog.author,
-        url: blog.url,
-        likes: blog.likes + 1,
-        user: blog.user.id
-      }
-    }).then(returnedBlog => {
-      setBlogs(blogs.map(blog => blog.id !== returnedBlog.id ? blog : returnedBlog))
-    }).catch((exception) => {
-      showMessage(exception.response.data.error, 'error')
-    })
+  const handleLike = blog => {
+    blogService
+      .update({
+        id: blog.id,
+        newObject: {
+          title: blog.title,
+          author: blog.author,
+          url: blog.url,
+          likes: blog.likes + 1,
+          user: blog.user.id,
+        },
+      })
+      .then(returnedBlog => {
+        setBlogs(
+          blogs.map(blog => (blog.id !== returnedBlog.id ? blog : returnedBlog))
+        )
+      })
+      .catch(exception => {
+        showMessage(exception.response.data.error, 'error')
+      })
   }
 
-  const handleRemove = (blog) => {
+  const handleRemove = blog => {
     if (window.confirm(`Remove blog ${blog.title} by ${blog.author}`)) {
-      blogService.deleteBlog(blog.id).then(() => {
-        showMessage(`blog ${blog.title} by ${blog.author} removed`, 'notification')
-        setBlogs(blogs.filter(b => b.id !== blog.id))
-      }).catch((exception) => {
-        showMessage(exception.response.data.error, 'error')
-      })
+      blogService
+        .deleteBlog(blog.id)
+        .then(() => {
+          showMessage(
+            `blog ${blog.title} by ${blog.author} removed`,
+            'notification'
+          )
+          setBlogs(blogs.filter(b => b.id !== blog.id))
+        })
+        .catch(exception => {
+          showMessage(exception.response.data.error, 'error')
+        })
     }
   }
 
   const showMessage = (text, type) => {
-    setMessage({ text, type })
+    messageDispatch({ type: 'CREATE', payload: { text, type } })
     setTimeout(() => {
-      setMessage(null)
+      messageDispatch({ type: 'CLEAR' })
     }, 5000)
   }
-
 
   if (user === null) {
     return (
       <div>
         <h2>Log in to application</h2>
-        <Notification message={message} />
+        <Notification />
         <form onSubmit={handleLogin}>
           <div>
             username
@@ -134,7 +144,9 @@ const App = () => {
               onChange={({ target }) => setPassword(target.value)}
             />
           </div>
-          <button id='login-button' type='submit'>login</button>
+          <button id='login-button' type='submit'>
+            login
+          </button>
         </form>
       </div>
     )
@@ -142,20 +154,25 @@ const App = () => {
   return (
     <div>
       <h2>blogs</h2>
-      <Notification message={message} />
+      <Notification />
       <p>
         {user.name} logged in
         <button onClick={handleLogout}>logout</button>
       </p>
       <Togglable buttonLabel='new note' ref={blogFormRef}>
-        <CreateForm
-          handleSubmit={handleCreate}
-        />
+        <CreateForm handleSubmit={handleCreate} />
       </Togglable>
-      {blogs.sort((a, b) => (b.likes - a.likes))
-        .map(blog =>
-          <Blog key={blog.id} blog={blog} handleLike={handleLike} handleRemove={handleRemove} user={user} />
-        )}
+      {blogs
+        .sort((a, b) => b.likes - a.likes)
+        .map(blog => (
+          <Blog
+            key={blog.id}
+            blog={blog}
+            handleLike={handleLike}
+            handleRemove={handleRemove}
+            user={user}
+          />
+        ))}
     </div>
   )
 }
