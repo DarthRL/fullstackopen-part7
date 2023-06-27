@@ -5,11 +5,13 @@ import { Provider } from 'react-redux'
 import messageReducer from './reducers/messageReducer'
 import { configureStore } from '@reduxjs/toolkit'
 import blogReducer from './reducers/blogReducer'
+import userReducer from './reducers/userReducer'
 
 const store = configureStore({
   reducer: {
     message: messageReducer,
     blogs: blogReducer,
+    user: userReducer,
   },
 })
 
