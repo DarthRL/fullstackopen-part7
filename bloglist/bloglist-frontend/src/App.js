@@ -13,25 +13,30 @@ import {
   initializeBlogs,
   likeBlog,
 } from './reducers/blogReducer'
-import { clearUserAndToken, setUserAndToken, setUsers } from './reducers/userReducer'
-
 import {
-  Route,
-  Routes,
-  Navigate,
-  useMatch,
-} from 'react-router-dom'
+  clearUserAndToken,
+  setUserAndToken,
+  setUsers,
+} from './reducers/userReducer'
+
+import { Route, Routes, Navigate, useMatch, Link, useNavigate } from 'react-router-dom'
 import Users from './components/Users'
 import User from './components/User'
 
 const App = () => {
-  const blogs = useSelector(state => state.blogs)
   const dispatch = useDispatch()
+  const navigate = useNavigate()
+
+  const blogs = useSelector(state => state.blogs)
+  const blogMatch = useMatch('/blogs/:id')
+
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+
   const user = useSelector(state => state.user.current)
   const users = useSelector(state => state.user.all)
   const userMatch = useMatch('/users/:id')
+
   const blogFormRef = useRef()
 
   useEffect(() => {
@@ -45,7 +50,6 @@ const App = () => {
 
     userService.getAll().then(data => dispatch(setUsers(data)))
   }, [dispatch])
-
 
   const handleLogin = async event => {
     event.preventDefault()
@@ -108,14 +112,19 @@ const App = () => {
             'notification'
           )
         )
+        navigate('/')
       } catch (exception) {
         dispatch(showMessage(exception.message, 'error'))
       }
     }
   }
 
-
-  const userToShow = userMatch ? users.find(user => user.id === userMatch.params.id) : null
+  const blogToShow = blogMatch
+    ? blogs.find(blog => blog.id === blogMatch.params.id)
+    : null
+  const userToShow = userMatch
+    ? users.find(user => user.id === userMatch.params.id)
+    : null
 
   if (user === null) {
     return (
@@ -158,37 +167,55 @@ const App = () => {
         {user.name} logged in
         <button onClick={handleLogout}>logout</button>
       </p>
-        <Routes>
-          <Route
-            path='/users'
-            element={user ? <Users /> : <Navigate replace to='/login' />}
-          />
-          <Route
-            path='/users/:id'
-            element={user ? <User user={userToShow} /> : <Navigate replace to='/login' />}
-          />
-          <Route
-            path='/'
-            element={
-              <div>
-                <Togglable buttonLabel='new note' ref={blogFormRef}>
-                  <CreateForm handleSubmit={handleCreate} />
-                </Togglable>
-                {[...blogs]
-                  .sort((a, b) => b.likes - a.likes)
-                  .map(blog => (
-                    <Blog
-                      key={blog.id}
-                      blog={blog}
-                      handleLike={handleLike}
-                      handleRemove={handleRemove}
-                      user={user}
-                    />
-                  ))}
-              </div>
-            }
-          />
-        </Routes>
+      <Routes>
+        <Route
+          path='/users'
+          element={user ? <Users /> : <Navigate replace to='/' />}
+        />
+        <Route
+          path='/users/:id'
+          element={
+            user ? <User user={userToShow} /> : <Navigate replace to='/' />
+          }
+        />
+        <Route
+          path='/blogs/:id'
+          element={
+            <Blog
+              blog={blogToShow}
+              handleLike={handleLike}
+              handleRemove={handleRemove}
+              user={user}
+            />
+          }
+        />
+        <Route
+          path='/'
+          element={
+            <div>
+              <Togglable buttonLabel='new note' ref={blogFormRef}>
+                <CreateForm handleSubmit={handleCreate} />
+              </Togglable>
+              {[...blogs]
+                .sort((a, b) => b.likes - a.likes)
+                .map(blog => (
+                  <div
+                    key={blog.id}
+                    style={{
+                      paddingTop: 10,
+                      paddingLeft: 2,
+                      border: 'solid',
+                      borderWidth: 1,
+                      marginBottom: 5,
+                    }}
+                  >
+                    <Link to={`/blogs/${blog.id}`}>{blog.title}</Link>
+                  </div>
+                ))}
+            </div>
+          }
+        />
+      </Routes>
     </div>
   )
 }
