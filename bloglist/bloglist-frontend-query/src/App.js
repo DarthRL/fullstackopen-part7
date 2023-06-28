@@ -7,6 +7,7 @@ import blogService from './services/blogs'
 import loginService from './services/login'
 import { useMessageDispatch } from './components/MessageContextProvider'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
+import { useUserDispatch, useUserValue } from './components/UserContextProvider'
 
 const App = () => {
   const queryClient = useQueryClient()
@@ -29,15 +30,19 @@ const App = () => {
 
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [user, setUser] = useState(null)
+
   const messageDispatch = useMessageDispatch()
+
+  const user = useUserValue()
+  const userDispatch = useUserDispatch()
+
   const blogFormRef = useRef()
 
   useEffect(() => {
     const loggedUserJSON = window.localStorage.getItem('loggedBlogappUser')
     if (loggedUserJSON) {
       const user = JSON.parse(loggedUserJSON)
-      setUser(user)
+      userDispatch({ type: 'CREATE', payload: user })
       blogService.setToken(user.token)
     }
   }, [])
@@ -51,7 +56,7 @@ const App = () => {
       })
       blogService.setToken(user.token)
       window.localStorage.setItem('loggedBlogappUser', JSON.stringify(user))
-      setUser(user)
+      userDispatch({ type: 'CREATE', payload: user })
       setUsername('')
       setPassword('')
     } catch (exception) {
@@ -64,7 +69,7 @@ const App = () => {
     try {
       blogService.setToken('')
       window.localStorage.removeItem('loggedBlogappUser')
-      setUser(null)
+      userDispatch({ type: 'CLEAR'})
     } catch (exception) {
       console.log(exception)
     }
@@ -102,7 +107,10 @@ const App = () => {
           `blog ${blog.title} by ${blog.author} removed`,
           'notification'
         )
-        queryClient.setQueryData('blogs', blogs.filter(b => b.id !== blog.id))
+        queryClient.setQueryData(
+          'blogs',
+          blogs.filter(b => b.id !== blog.id)
+        )
       } catch (exception) {
         showMessage(exception.message, 'error')
       }
@@ -115,7 +123,7 @@ const App = () => {
       messageDispatch({ type: 'CLEAR' })
     }, 5000)
   }
-  if (!blogs) return <div></div>
+  if (!blogs) return <div>loading</div>
 
   if (user === null) {
     return (
