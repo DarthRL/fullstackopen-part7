@@ -19,7 +19,14 @@ import {
   setUsers,
 } from './reducers/userReducer'
 
-import { Route, Routes, Navigate, useMatch, Link, useNavigate } from 'react-router-dom'
+import {
+  Route,
+  Routes,
+  Navigate,
+  useMatch,
+  Link,
+  useNavigate,
+} from 'react-router-dom'
 import Users from './components/Users'
 import User from './components/User'
 
@@ -161,12 +168,19 @@ const App = () => {
   }
   return (
     <div>
-      <h2>blogs</h2>
-      <Notification />
-      <p>
+      <div style={{ background: 'LightGrey', padding: 5 }}>
+        <Link style={{ padding: 5 }} to='/'>
+          blog
+        </Link>
+        <Link style={{ padding: 5 }} to='/users'>
+          users
+        </Link>
         {user.name} logged in
         <button onClick={handleLogout}>logout</button>
-      </p>
+      </div>
+      <h2>blog app</h2>
+      <Notification />
+
       <Routes>
         <Route
           path='/users'
