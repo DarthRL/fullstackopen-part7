@@ -71,3 +71,10 @@ Content-Type: application/json
     "password": "aaa"
 }
 ###
+POST http://localhost:3003/api/blogs/649c33b00c9568ff1428345c/comments
+Content-Type: application/json
+
+{
+    "comment": "newcomment"
+}
+###
