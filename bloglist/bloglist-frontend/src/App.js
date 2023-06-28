@@ -3,8 +3,8 @@ import Blog from './components/Blog'
 import Notification from './components/Notification'
 import CreateForm from './components/CreateForm'
 import Togglable from './components/Togglable'
-import blogService from './services/blogs'
 import loginService from './services/login'
+import userService from './services/users'
 import { showMessage } from './reducers/messageReducer'
 import { useDispatch, useSelector } from 'react-redux'
 import {
@@ -13,31 +13,39 @@ import {
   initializeBlogs,
   likeBlog,
 } from './reducers/blogReducer'
-import { clearUserAndToken, setUserAndToken } from './reducers/userReducer'
+import { clearUserAndToken, setUserAndToken, setUsers } from './reducers/userReducer'
 
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
+import {
+  Route,
+  Routes,
+  Navigate,
+  useMatch,
+} from 'react-router-dom'
 import Users from './components/Users'
+import User from './components/User'
 
 const App = () => {
   const blogs = useSelector(state => state.blogs)
   const dispatch = useDispatch()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const user = useSelector(state => state.user)
+  const user = useSelector(state => state.user.current)
+  const users = useSelector(state => state.user.all)
+  const userMatch = useMatch('/users/:id')
   const blogFormRef = useRef()
 
   useEffect(() => {
     dispatch(initializeBlogs())
-  }, [dispatch])
 
-  useEffect(() => {
     const loggedUserJSON = window.localStorage.getItem('loggedBlogappUser')
     if (loggedUserJSON) {
       const user = JSON.parse(loggedUserJSON)
       dispatch(setUserAndToken(user))
-      blogService.setToken(user.token)
     }
-  }, [])
+
+    userService.getAll().then(data => dispatch(setUsers(data)))
+  }, [dispatch])
+
 
   const handleLogin = async event => {
     event.preventDefault()
@@ -106,6 +114,9 @@ const App = () => {
     }
   }
 
+
+  const userToShow = userMatch ? users.find(user => user.id === userMatch.params.id) : null
+
   if (user === null) {
     return (
       <div>
@@ -147,9 +158,15 @@ const App = () => {
         {user.name} logged in
         <button onClick={handleLogout}>logout</button>
       </p>
-      <Router>
         <Routes>
-          <Route path='/users' element={<Users />} />
+          <Route
+            path='/users'
+            element={user ? <Users /> : <Navigate replace to='/login' />}
+          />
+          <Route
+            path='/users/:id'
+            element={user ? <User user={userToShow} /> : <Navigate replace to='/login' />}
+          />
           <Route
             path='/'
             element={
@@ -172,7 +189,6 @@ const App = () => {
             }
           />
         </Routes>
-      </Router>
     </div>
   )
 }

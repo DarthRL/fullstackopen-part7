@@ -3,13 +3,16 @@ import blogService from '../services/blogs'
 
 const userSlice = createSlice({
   name: 'user',
-  initialState: null,
+  initialState: {current: null, all:[]},
   reducers: {
     setUser(state, action) {
-      return action.payload
+      state.current = action.payload
     },
-    clearUser() {
-      return null
+    setUsers(state, action) {
+      state.all = action.payload
+    },
+    clearUser(state) {
+      state.current = null
     },
   },
 })
@@ -28,5 +31,5 @@ export const clearUserAndToken = () => {
   }
 }
 
-export const {setUser, clearUser} = userSlice.actions
+export const {setUser, clearUser, setUsers} = userSlice.actions
 export default userSlice.reducer
