@@ -15,6 +15,9 @@ import {
 } from './reducers/blogReducer'
 import { clearUserAndToken, setUserAndToken } from './reducers/userReducer'
 
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
+import Users from './components/Users'
+
 const App = () => {
   const blogs = useSelector(state => state.blogs)
   const dispatch = useDispatch()
@@ -144,20 +147,32 @@ const App = () => {
         {user.name} logged in
         <button onClick={handleLogout}>logout</button>
       </p>
-      <Togglable buttonLabel='new note' ref={blogFormRef}>
-        <CreateForm handleSubmit={handleCreate} />
-      </Togglable>
-      {[...blogs]
-        .sort((a, b) => b.likes - a.likes)
-        .map(blog => (
-          <Blog
-            key={blog.id}
-            blog={blog}
-            handleLike={handleLike}
-            handleRemove={handleRemove}
-            user={user}
+      <Router>
+        <Routes>
+          <Route path='/users' element={<Users />} />
+          <Route
+            path='/'
+            element={
+              <div>
+                <Togglable buttonLabel='new note' ref={blogFormRef}>
+                  <CreateForm handleSubmit={handleCreate} />
+                </Togglable>
+                {[...blogs]
+                  .sort((a, b) => b.likes - a.likes)
+                  .map(blog => (
+                    <Blog
+                      key={blog.id}
+                      blog={blog}
+                      handleLike={handleLike}
+                      handleRemove={handleRemove}
+                      user={user}
+                    />
+                  ))}
+              </div>
+            }
           />
-        ))}
+        </Routes>
+      </Router>
     </div>
   )
 }
