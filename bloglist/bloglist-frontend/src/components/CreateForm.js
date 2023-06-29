@@ -20,15 +20,15 @@ const CreateForm = ({ handleSubmit }) => {
 
   return (
     <div>
-      <h2 >create new</h2>
+      <h2>create new</h2>
       <form onSubmit={create}>
-        <div className="join-vertical join">
-          <div className="join-item">
+        <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
+          <div className="sm:col-span-4">
             <label className="label">
               <span className="label-text">title:</span>
             </label>
             <input
-              className="input-bordered input-primary input w-full max-w-xs"
+              className="input-bordered input-primary input w-full max-w-xs "
               id="title"
               type="text"
               value={title}
@@ -36,7 +36,7 @@ const CreateForm = ({ handleSubmit }) => {
               onChange={({ target }) => setTitle(target.value)}
             />
           </div>
-          <div className="join-item">
+          <div className="sm:col-span-4">
             <label className="label">
               <span className="label-text">author:</span>
             </label>
@@ -49,7 +49,7 @@ const CreateForm = ({ handleSubmit }) => {
               onChange={({ target }) => setAuthor(target.value)}
             />
           </div>
-          <div className="join-item">
+          <div className="sm:col-span-4">
             <label className="label">
               <span className="label-text">url:</span>
             </label>
@@ -62,13 +62,15 @@ const CreateForm = ({ handleSubmit }) => {
               onChange={({ target }) => setUrl(target.value)}
             />
           </div>
-          <button
-            className="join-item btn rounded-r-full"
-            id="create-button"
-            type="submit"
-          >
-            create
-          </button>
+          <div className="row-start-4">
+            <button
+              className="btn"
+              id="create-button"
+              type="submit"
+            >
+              create
+            </button>
+          </div>
         </div>
       </form>
     </div>
