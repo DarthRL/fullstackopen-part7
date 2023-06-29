@@ -35,5 +35,8 @@ module.exports = {
     "react": {
       "version": "detect"
     }
-  }
+  },
+
+  root: true,
+  extends: ["plugin:tailwindcss/recommended"],
 }
